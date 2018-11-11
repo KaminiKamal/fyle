@@ -1,25 +1,109 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import _ from 'lodash';
+import { BootstrapTable, TableHeaderColumn, ButtonGroup } from 'react-bootstrap-table';
+import 'react-bootstrap-table/dist/react-bootstrap-table-all.min.css';
 
-class App extends Component {
-  render() {
+require('dotenv').config();
+
+class App extends Component
+{
+  constructor(props){
+    super(props);
+    this.state = {
+      stateArray: ["MUMBAI", "BANGALORE", "CHENNAI","DELHI","KOLKATA", "PATNA"],
+      cityData: [],
+      text: null,
+      loading: false
+    }
+  }
+
+  selectedCity(e){
+
+    if(e.target.value==="0"){
+      return;
+    }
+    else{
+      this.setState({loading: true});
+      fetch('https://vast-shore-74260.herokuapp.com/banks?city='+e.target.value, {
+        method: 'GET'
+      })
+      .then(res => (res.json()))
+      .then(res => {
+        console.log("res", res);
+        this.setState({cityData: res, loading: false});
+        
+      })
+      .catch(err => {
+        console.log("err", err);
+      })
+    }
+    
+  }
+
+  searchText(){
+    this.setState({loading: true})
+   // console.log("this0000", this.state.text);
+    
+    let filter_by_id = _.filter(this.state.cityData, (arr, index) => (arr.bank_id===Number(this.state.text)));
+    
+    let filter_by_ifsc = _.filter(this.state.cityData, (arr, index) => (arr.ifsc === this.state.text.toUpperCase()));
+
+    let filter_by_bank_name = _.filter(this.state.cityData, (arr, index) => (arr.bank_name === this.state.text.toUpperCase()));
+
+    let filter_by_state = _.filter(this.state.cityData, (arr, index) => (arr.state === this.state.text.toUpperCase()));
+
+    let filter_by_city = _.filter(this.state.cityData, (arr, index) => (arr.city === this.state.text.toUpperCase()));
+
+    let filter_by_district = _.filter(this.state.cityData, (arr, index) => (arr.district === this.state.text.toUpperCase()));
+
+    let filter_by_address = _.filter(this.state.cityData, (arr, index) => (arr.address === this.state.text.toUpperCase()));
+
+    filter_by_ifsc = filter_by_ifsc.concat(filter_by_id);
+    filter_by_bank_name = filter_by_bank_name.concat(filter_by_ifsc);
+    filter_by_state = filter_by_state.concat(filter_by_bank_name);
+    filter_by_city = filter_by_city.concat(filter_by_state);
+    filter_by_district = filter_by_district.concat(filter_by_city);
+    filter_by_address = filter_by_address.concat(filter_by_district);
+    let uniq = _.uniq(filter_by_address, 'ifsc');
+    this.setState({cityData: uniq, loading: false})
+
+  }
+  setSearch(e){
+    this.setState({text: e.target.value})
+  }
+
+  render()
+  {
     return (
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-        </header>
+      <div>
+        <select onChange={this.selectedCity.bind(this)}>
+          <option key="0">--select city--</option>
+          {
+            _.map(this.state.stateArray, (city, index) => (
+              
+              <option key={city}>{city}</option>
+            ))
+          }
+        </select>
+        <input type="text" placeholder="Search ... "  onChange={this.setSearch.bind(this)}/>
+        <button onClick={this.searchText.bind(this)}>search</button>
+        {
+          (this.state.loading)
+            ?
+          "Loading ... Please wait"
+            :
+          <BootstrapTable data={this.state.cityData} striped={true} hover={true} ref='table'>
+            <TableHeaderColumn dataField="bank_id" isKey={true}  width='50px' headerAlign='center' dataAlign='center' hidden={false} export={false} searchable={false}>Bank ID</TableHeaderColumn>
+            <TableHeaderColumn dataField="ifsc" hidden={false}  width='220px' headerAlign='left' dataAlign='center' export={false} searchable={false}>IFSC Code</TableHeaderColumn>
+            <TableHeaderColumn dataField="bank_name"  hidden={false}  width='450px' headerAlign='left' dataAlign='left' export={false} searchable={false}>Bank Name</TableHeaderColumn>
+            <TableHeaderColumn dataField="state"  hidden={false}  width='280px' headerAlign='center' dataAlign='center' export={false} searchable={false}>State</TableHeaderColumn>
+            <TableHeaderColumn dataField="city" hidden={false}  width='350px' headerAlign='left' dataAlign='center' export={false} searchable={false}>City</TableHeaderColumn>
+            <TableHeaderColumn dataField="district"  hidden={false}  width='320px' headerAlign='left' dataAlign='center' export={false} searchable={false}>District</TableHeaderColumn>
+            <TableHeaderColumn dataField="address"  hidden={false}  width='120px' headerAlign='left' dataAlign='left' export={false} searchable={false}>Address</TableHeaderColumn>
+          </BootstrapTable>
+        
+        }
+       
       </div>
     );
   }
