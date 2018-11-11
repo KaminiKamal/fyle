@@ -43,7 +43,7 @@ class App extends Component
   }
 
   searchText(){
-    this.setState({loading: true, cityData: this.state.copyData})
+    this.setState({loading: true, cityData: []})
     console.log("this0000", this.text.value);
     
     let filter_by_id = _.filter(copyData, (arr, index) => (arr.bank_id===Number(this.text.value)));
