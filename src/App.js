@@ -4,7 +4,7 @@ import { BootstrapTable, TableHeaderColumn, ButtonGroup } from 'react-bootstrap-
 import 'react-bootstrap-table/dist/react-bootstrap-table-all.min.css';
 
 require('dotenv').config();
-
+let copyData = [];
 class App extends Component
 {
   constructor(props){
@@ -12,6 +12,7 @@ class App extends Component
     this.state = {
       stateArray: ["MUMBAI", "BANGALORE", "CHENNAI","DELHI","KOLKATA", "PATNA"],
       cityData: [],
+      copyData: [],
       text: null,
       loading: false
     }
@@ -30,7 +31,8 @@ class App extends Component
       .then(res => (res.json()))
       .then(res => {
         console.log("res", res);
-        this.setState({cityData: res, loading: false});
+        this.setState({cityData: res, copyData: res, loading: false});
+        copyData = res;
         
       })
       .catch(err => {
@@ -41,22 +43,40 @@ class App extends Component
   }
 
   searchText(){
-    this.setState({loading: true})
-   // console.log("this0000", this.state.text);
+    this.setState({loading: true, cityData: this.state.copyData})
+    console.log("this0000", this.text.value);
     
-    let filter_by_id = _.filter(this.state.cityData, (arr, index) => (arr.bank_id===Number(this.state.text)));
+    let filter_by_id = _.filter(copyData, (arr, index) => (arr.bank_id===Number(this.text.value)));
     
-    let filter_by_ifsc = _.filter(this.state.cityData, (arr, index) => (arr.ifsc === this.state.text.toUpperCase()));
+    let filter_by_ifsc = _.filter(copyData, (arr, index) => (
+      arr.ifsc.search(this.text.value.toUpperCase())>-1
+    ));
 
-    let filter_by_bank_name = _.filter(this.state.cityData, (arr, index) => (arr.bank_name === this.state.text.toUpperCase()));
+    //let filter_by_bank_name = _.filter(this.state.cityData, (arr, index) => (arr.bank_name === this.text.value.toUpperCase()));
+    let filter_by_bank_name = _.filter(copyData, (arr, index) => (
+      arr.bank_name.search(this.text.value.toUpperCase())>-1
+      
+    ));
 
-    let filter_by_state = _.filter(this.state.cityData, (arr, index) => (arr.state === this.state.text.toUpperCase()));
+    let filter_by_state = _.filter(copyData, (arr, index) => (
+      //arr.state === this.text.value.toUpperCase()
+      arr.state.search(this.text.value.toUpperCase())>-1
+    ));
 
-    let filter_by_city = _.filter(this.state.cityData, (arr, index) => (arr.city === this.state.text.toUpperCase()));
+    let filter_by_city = _.filter(copyData, (arr, index) => (
+      //arr.city === this.text.value.toUpperCase()
+      arr.city.search(this.text.value.toUpperCase())>-1
+    ));
 
-    let filter_by_district = _.filter(this.state.cityData, (arr, index) => (arr.district === this.state.text.toUpperCase()));
+    let filter_by_district = _.filter(copyData, (arr, index) => (
+      //arr.district === this.text.value.toUpperCase()
+      arr.district.search(this.text.value.toUpperCase())>-1
+    ));
 
-    let filter_by_address = _.filter(this.state.cityData, (arr, index) => (arr.address === this.state.text.toUpperCase()));
+    let filter_by_address = _.filter(copyData, (arr, index) => (
+      arr.address.search(this.text.value.toUpperCase())>-1
+     // arr.address === this.text.value.toUpperCase()
+    ));
 
     filter_by_ifsc = filter_by_ifsc.concat(filter_by_id);
     filter_by_bank_name = filter_by_bank_name.concat(filter_by_ifsc);
@@ -69,7 +89,7 @@ class App extends Component
 
   }
   setSearch(e){
-    this.setState({text: e.target.value})
+    this.setState({text: this.text.value})
   }
 
   render()
@@ -85,7 +105,7 @@ class App extends Component
             ))
           }
         </select>
-        <input type="text" placeholder="Search ... "  onChange={this.setSearch.bind(this)}/>
+        <input type="text" placeholder="Search ... "  ref={(e) => this.text = e} />
         <button onClick={this.searchText.bind(this)}>search</button>
         {
           (this.state.loading)
